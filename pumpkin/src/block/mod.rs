@@ -19,11 +19,14 @@ use crate::entity::item::ItemEntity;
 use crate::world::World;
 use crate::{block::blocks::crafting_table::CraftingTableBlock, entity::player::Player};
 use crate::{block::blocks::jukebox::JukeboxBlock, entity::experience_orb::ExperienceOrbEntity};
+
 use std::sync::Arc;
 
 mod blocks;
+
 pub mod pumpkin_block;
 pub mod registry;
+
 
 #[must_use]
 pub fn default_registry() -> Arc<BlockRegistry> {
@@ -36,6 +39,9 @@ pub fn default_registry() -> Arc<BlockRegistry> {
     manager.register(TNTBlock);
     manager.register(LeverBlock);
 
+    // Register fluid blocks
+    blocks::fluid_blocks::register_fluid_blocks(&mut manager);
+    
     register_door_blocks(&mut manager);
     register_fence_blocks(&mut manager);
     register_fence_gate_blocks(&mut manager);

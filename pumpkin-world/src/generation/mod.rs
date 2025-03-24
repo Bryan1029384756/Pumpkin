@@ -22,7 +22,8 @@ pub mod y_offset;
 
 use derive_getters::Getters;
 pub use generator::WorldGenerator;
-use implementation::VanillaGenerator;
+use implementation::{VanillaGenerator, void::VoidGenerator};
+use pumpkin_config::{advanced_config, world::GeneratorType};
 use pumpkin_util::random::{
     RandomDeriver, RandomImpl, legacy_rand::LegacyRand, xoroshiro128::Xoroshiro,
 };
@@ -31,8 +32,10 @@ pub use seed::Seed;
 use generator::GeneratorInit;
 
 pub fn get_world_gen(seed: Seed) -> Box<dyn WorldGenerator> {
-    // TODO decide which WorldGenerator to pick based on config.
-    Box::new(VanillaGenerator::new(seed))
+    match advanced_config().world_generation.generator_type {
+        GeneratorType::Vanilla => Box::new(VanillaGenerator::new(seed)),
+        GeneratorType::Void => Box::new(VoidGenerator::new(seed)),
+    }
 }
 
 #[derive(Getters)]

@@ -21,6 +21,7 @@ use crate::{
 };
 use border::Worldborder;
 use explosion::Explosion;
+
 use pumpkin_config::BasicConfiguration;
 use pumpkin_data::{
     entity::{EntityStatus, EntityType},
@@ -69,6 +70,7 @@ pub mod bossbar;
 pub mod custom_bossbar;
 pub mod scoreboard;
 pub mod weather;
+pub mod fluid;
 
 use weather::Weather;
 
@@ -125,6 +127,8 @@ pub struct World {
     pub dimension_type: DimensionType,
     /// The world's weather, including rain and thunder levels.
     pub weather: Mutex<Weather>,
+     /// The world's fluid manager, handling fluid mechanics.
+     pub fluid_manager: Mutex<fluid::FluidManager>,
     // TODO: entities
 }
 
@@ -140,6 +144,7 @@ impl World {
             level_time: Mutex::new(LevelTime::new()),
             dimension_type,
             weather: Mutex::new(Weather::new()),
+            fluid_manager: Mutex::new(fluid::FluidManager::new()),
         }
     }
 
@@ -285,6 +290,12 @@ impl World {
             let mut weather = self.weather.lock().await;
             weather.tick_weather(self).await;
         };
+
+        // Tick fluid mechanics
+        {
+            let mut fluid_manager = self.fluid_manager.lock().await;
+            fluid_manager.tick(self, server).await;
+        }
 
         // Player ticks
         for player in self.players.read().await.values() {
@@ -1217,6 +1228,24 @@ impl World {
                         .await;
                 }
             }
+        }
+
+        let block = self.get_block(&block_pos).await;
+        if let Ok(block) = block {
+            if let Some(pumpkin_block) =
+            server.block_registry.get_pumpkin_block(&block)
+        {
+            pumpkin_block
+                .on_neighbor_update(
+                    server,
+                    self,
+                    &block,
+                    &block_pos,
+                    &BlockDirection::Up,
+                    block_pos,
+                )
+                .await;
+        }
         }
     }
 }

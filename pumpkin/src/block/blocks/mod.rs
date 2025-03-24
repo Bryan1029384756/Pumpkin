@@ -15,6 +15,7 @@ pub(crate) mod jukebox;
 pub(crate) mod lever;
 pub(crate) mod logs;
 pub(crate) mod tnt;
+pub(crate) mod fluid_blocks;
 
 /// The standard destroy with container removes the player forcibly from the container,
 /// drops items to the floor, and back to the player's inventory if the item stack is in movement.

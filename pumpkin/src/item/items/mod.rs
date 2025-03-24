@@ -1,3 +1,4 @@
+mod bucket;
 mod egg;
 mod snowball;
 mod sword;
@@ -9,6 +10,7 @@ use egg::EggItem;
 use snowball::SnowBallItem;
 use sword::SwordItem;
 use trident::TridentItem;
+use bucket::BucketItem;
 
 use super::registry::ItemRegistry;
 #[must_use]
@@ -19,6 +21,7 @@ pub fn default_registry() -> Arc<ItemRegistry> {
     manager.register(EggItem);
     manager.register(SwordItem);
     manager.register(TridentItem);
+    manager.register(BucketItem);
 
     Arc::new(manager)
 }

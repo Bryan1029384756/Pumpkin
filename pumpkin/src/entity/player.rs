@@ -955,6 +955,93 @@ impl Player {
         }}
     }
 
+ 
+    pub async fn get_targeted_block(&self, max_distance: f64) -> Option<(BlockPos, pumpkin_data::block::Block)> {
+        // Get the player's eye position and look vector
+        let entity = &self.living_entity.entity;
+        let position = entity.pos.load();
+        
+        // Eye height is from the entity's feet, so add it to the player's position
+        let eye_position = Vector3::new(
+            position.x,
+            position.y + f64::from(entity.standing_eye_height),
+            position.z,
+        );
+        
+        // Get the player's look vector
+        let pitch = f64::from(entity.pitch.load());
+        let yaw = f64::from(entity.yaw.load());
+        
+        // Convert to radians
+        let pitch_rad = pitch.to_radians();
+        let yaw_rad = yaw.to_radians();
+        
+        // Calculate the direction vector
+        // Minecraft uses a different coordinate system than standard math
+        // Pitch: -90° (looking up) to 90° (looking down)
+        // Yaw: rotation around y-axis (-180° to 180°)
+        let x = -yaw_rad.sin();
+        let y = -pitch_rad.sin();
+        let z = yaw_rad.cos() * pitch_rad.cos();
+        
+        let direction = Vector3::new(x, y, z).normalize();
+        
+        // Get the world
+        let world = self.world().await;
+        
+        // Perform ray tracing
+        let step_size = 0.1; // Step size for the ray (smaller = more precise but more expensive)
+        let mut distance = 0.0;
+        
+        let mut last_pos = BlockPos(Vector3::new(
+            eye_position.x.floor() as i32,
+            eye_position.y.floor() as i32,
+            eye_position.z.floor() as i32,
+        ));
+        
+        while distance < max_distance {
+            // Calculate the current position along the ray
+            let current_x = eye_position.x + direction.x * distance;
+            let current_y = eye_position.y + direction.y * distance;
+            let current_z = eye_position.z + direction.z * distance;
+            
+            // Convert to block coordinates
+            let block_pos = BlockPos(Vector3::new(
+                current_x.floor() as i32,
+                current_y.floor() as i32,
+                current_z.floor() as i32,
+            ));
+            
+            // If we've moved to a new block position
+            if block_pos != last_pos {
+                // Check if there's a block at this position
+                match world.get_block(&block_pos).await {
+                    Ok(block) => {
+                        // Skip air blocks
+                        
+                        if block.id != 0 { // Air block has id 0
+                            return Some((block_pos, block));
+                        }
+                    },
+                    Err(_) => {
+                        // Block not found or error, continue ray tracing
+                    }
+                }
+                
+                last_pos = block_pos;
+            }
+            
+            // Increment the distance
+            distance += step_size;
+        }
+        
+        None
+    }
+ 
+    pub async fn get_looking_at_block(&self) -> Option<(BlockPos, pumpkin_data::block::Block)> {
+        self.get_targeted_block(5.0).await
+    }
+
     pub fn block_interaction_range(&self) -> f64 {
         if self.gamemode.load() == GameMode::Creative {
             5.0

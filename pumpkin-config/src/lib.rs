@@ -23,6 +23,7 @@ pub use networking::lan_broadcast::LANBroadcastConfig;
 pub use networking::rcon::RCONConfig;
 pub use pvp::PVPConfig;
 pub use server_links::ServerLinksConfig;
+pub use world::WorldGenerationConfig;
 
 mod commands;
 
@@ -30,6 +31,7 @@ pub mod chunk;
 pub mod op;
 mod pvp;
 mod server_links;
+pub mod world;
 
 use networking::NetworkingConfig;
 use resource_pack::ResourcePackConfig;
@@ -92,6 +94,7 @@ pub struct AdvancedConfiguration {
     pub commands: CommandsConfig,
     pub pvp: PVPConfig,
     pub server_links: ServerLinksConfig,
+	pub world_generation: WorldGenerationConfig,
 }
 
 #[derive(Serialize, Deserialize)]
