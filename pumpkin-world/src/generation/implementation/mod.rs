@@ -1,4 +1,5 @@
 pub mod superflat;
+pub mod void;
 
 use pumpkin_util::math::{vector2::Vector2, vector3::Vector3};
 

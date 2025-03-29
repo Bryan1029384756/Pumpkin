@@ -3,6 +3,7 @@ use crate::{
     server::Server,
 };
 use crossbeam::atomic::AtomicCell;
+use pumpkin_config::advanced_config;
 use pumpkin_nbt::compound::NbtCompound;
 use pumpkin_world::data::player_data::{PlayerDataError, PlayerDataStorage};
 use std::sync::Arc;
@@ -57,6 +58,10 @@ impl ServerPlayerData {
     ///
     /// A Result indicating success or the error that occurred.
     pub async fn handle_player_leave(&self, player: &Player) -> Result<(), PlayerDataError> {
+        if !advanced_config().player_data.save_player_data {
+            return Ok(());
+        }
+
         let mut nbt = NbtCompound::new();
         player.write_nbt(&mut nbt).await;
 
@@ -107,6 +112,10 @@ impl ServerPlayerData {
     /// This function immediately saves all online players' data to disk.
     /// Useful for server shutdown or backup operations.
     pub async fn save_all_players(&self, server: &Server) -> Result<(), PlayerDataError> {
+        if !advanced_config().player_data.save_player_data {
+            return Ok(());
+        }
+
         let mut total_players = 0;
 
         // Save players from all worlds

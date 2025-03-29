@@ -158,29 +158,34 @@ impl Level {
         self.tasks.wait().await;
         log::debug!("Done awaiting level tasks");
 
-        // wait for chunks currently saving in other threads
-        self.chunk_saver.block_and_await_ongoing_tasks().await;
+        // Check if world data saving is enabled
+        if advanced_config().player_data.save_world_data {
+            // wait for chunks currently saving in other threads
+            self.chunk_saver.block_and_await_ongoing_tasks().await;
 
-        // save all chunks currently in memory
-        let chunks_to_write = self
-            .loaded_chunks
-            .iter()
-            .map(|chunk| (*chunk.key(), chunk.value().clone()))
-            .collect::<Vec<_>>();
-        self.loaded_chunks.clear();
+            // save all chunks currently in memory
+            let chunks_to_write = self
+                .loaded_chunks
+                .iter()
+                .map(|chunk| (*chunk.key(), chunk.value().clone()))
+                .collect::<Vec<_>>();
+            self.loaded_chunks.clear();
 
-        // TODO: I think the chunk_saver should be at the server level
-        self.chunk_saver.clear_watched_chunks().await;
-        self.write_chunks(chunks_to_write).await;
+            // TODO: I think the chunk_saver should be at the server level
+            self.chunk_saver.clear_watched_chunks().await;
+            self.write_chunks(chunks_to_write).await;
 
-        // then lets save the world info
-        let result = self
-            .world_info_writer
-            .write_world_info(self.level_info.clone(), &self.level_folder);
+            // then lets save the world info
+            let result = self
+                .world_info_writer
+                .write_world_info(self.level_info.clone(), &self.level_folder);
 
-        // Lets not stop the overall save for this
-        if let Err(err) = result {
-            log::error!("Failed to save level.dat: {}", err);
+            // Lets not stop the overall save for this
+            if let Err(err) = result {
+                log::error!("Failed to save level.dat: {}", err);
+            }
+        } else {
+            log::info!("World data saving is disabled, skipping chunk and level.dat saving");
         }
     }
 
@@ -339,6 +344,10 @@ impl Level {
     }
 
     pub async fn write_chunks(&self, chunks_to_write: Vec<(Vector2<i32>, SyncChunk)>) {
+        if !advanced_config().player_data.save_world_data {
+            return;
+        }
+
         if chunks_to_write.is_empty() {
             return;
         }

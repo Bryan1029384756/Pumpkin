@@ -332,13 +332,17 @@ impl PumpkinServer {
 
         log::info!("Stopped accepting incoming connections");
 
-        if let Err(e) = self
-            .server
-            .player_data_storage
-            .save_all_players(&self.server)
-            .await
-        {
-            log::error!("Error saving all players during shutdown: {}", e);
+        if advanced_config().player_data.save_player_data {
+            if let Err(e) = self
+                .server
+                .player_data_storage
+                .save_all_players(&self.server)
+                .await
+            {
+                log::error!("Error saving all players during shutdown: {}", e);
+            }
+        } else {
+            log::info!("Player data saving is disabled, skipping player data save");
         }
 
         let kick_message = TextComponent::text("Server stopped");

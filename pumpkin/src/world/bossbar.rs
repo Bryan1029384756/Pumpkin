@@ -55,6 +55,75 @@ impl Bossbar {
             flags: BossbarFlags::NoFlags,
         }
     }
+
+    #[must_use]
+    pub fn with_options(title: TextComponent, options: BossbarOptions) -> Self {
+        let uuid = Uuid::new_v4();
+
+        Self {
+            uuid,
+            title,
+            health: options.health.unwrap_or(0.0),
+            color: options.color.unwrap_or(BossbarColor::White),
+            division: options.division.unwrap_or(BossbarDivisions::NoDivision),
+            flags: options.flags.unwrap_or(BossbarFlags::NoFlags),
+        }
+    }
+
+    #[must_use]
+    pub fn builder(title: TextComponent) -> BossbarBuilder {
+        BossbarBuilder::new(title)
+    }
+}
+#[derive(Default)]
+pub struct BossbarOptions {
+    pub health: Option<f32>,
+    pub color: Option<BossbarColor>,
+    pub division: Option<BossbarDivisions>,
+    pub flags: Option<BossbarFlags>,
+}
+pub struct BossbarBuilder {
+    title: TextComponent,
+    options: BossbarOptions,
+}
+
+impl BossbarBuilder {
+    #[must_use]
+    pub fn new(title: TextComponent) -> Self {
+        Self {
+            title,
+            options: BossbarOptions::default(),
+        }
+    }
+
+    #[must_use]
+    pub fn health(mut self, health: f32) -> Self {
+        self.options.health = Some(health);
+        self
+    }
+
+    #[must_use]
+    pub fn color(mut self, color: BossbarColor) -> Self {
+        self.options.color = Some(color);
+        self
+    }
+
+    #[must_use]
+    pub fn division(mut self, division: BossbarDivisions) -> Self {
+        self.options.division = Some(division);
+        self
+    }
+
+    #[must_use]
+    pub fn flags(mut self, flags: BossbarFlags) -> Self {
+        self.options.flags = Some(flags);
+        self
+    }
+
+    #[must_use]
+    pub fn build(self) -> Bossbar {
+        Bossbar::with_options(self.title, self.options)
+    }
 }
 
 /// Extra methods for [`Player`] to send and manage the bossbar.

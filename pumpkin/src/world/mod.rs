@@ -17,7 +17,7 @@ use crate::{
         block::block_break::BlockBreakEvent,
         player::{
             player_join::PlayerJoinEvent, player_leave::PlayerLeaveEvent,
-            player_respawn::PlayerRespawnEvent,
+            player_respawn::PlayerRespawnEvent, player_spawn_location::PlayerSpawnLocationEvent,
         },
         world::{chunk_load::ChunkLoad, chunk_save::ChunkSave, chunk_send::ChunkSend},
     },
@@ -484,7 +484,8 @@ impl World {
         };
 
         // Teleport
-        let (position, yaw, pitch) = if player.has_played_before.load(Ordering::Relaxed) {
+        let (mut position, mut yaw, mut pitch) = if player.has_played_before.load(Ordering::Relaxed)
+        {
             let position = player.position();
             let yaw = player.living_entity.entity.yaw.load(); //info.spawn_angle;
             let pitch = player.living_entity.entity.pitch.load();
@@ -502,6 +503,13 @@ impl World {
 
             (position, yaw, pitch)
         };
+
+        let mut event = PlayerSpawnLocationEvent::new(player.clone(), position, yaw, pitch);
+        event = PLUGIN_MANAGER.lock().await.fire(event).await;
+
+        position = event.spawn_position;
+        yaw = event.yaw;
+        pitch = event.pitch;
 
         let velocity = player.living_entity.entity.velocity.load();
 

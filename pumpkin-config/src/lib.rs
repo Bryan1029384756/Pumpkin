@@ -24,6 +24,7 @@ pub use networking::lan_broadcast::LANBroadcastConfig;
 pub use networking::rcon::RCONConfig;
 pub use pvp::PVPConfig;
 pub use server_links::ServerLinksConfig;
+pub use world::WorldGenerationConfig;
 
 mod commands;
 
@@ -32,6 +33,7 @@ pub mod op;
 mod player_data;
 mod pvp;
 mod server_links;
+pub mod world;
 
 use networking::NetworkingConfig;
 use player_data::PlayerDataConfig;
@@ -95,6 +97,7 @@ pub struct AdvancedConfiguration {
     pub commands: CommandsConfig,
     pub pvp: PVPConfig,
     pub server_links: ServerLinksConfig,
+    pub world_generation: WorldGenerationConfig,
     pub player_data: PlayerDataConfig,
 }
 
